@@ -19,14 +19,18 @@ df2 = df2[["TIKET 2", "Datum PLTS", "Broj PLTS", "Sifra artikla",
            "Lokacija aparata", "TMS nalog", "Datum TMS naloga",
            "KOMENTAR", "NPT", "Kolona1"]].copy()
 
-# Normalizuj ključeve u string (da ne pravi problem sa brojevima)
+# KLJUCNO: normalizuj kljuceve u string
 df1["PLTS"] = df1["PLTS"].astype(str).str.strip()
 df2["Broj PLTS"] = df2["Broj PLTS"].astype(str).str.strip()
 
-# Zadrži SAMO JEDAN red iz druge tabele po PLTS-u da ne bi duplirao redove u prvoj
+# KLJUCNO: u drugoj tabeli ostavi SAMO JEDAN red po PLTS-u
 df2 = df2.drop_duplicates(subset=["Broj PLTS"], keep="first")
 
-# LEFT JOIN - svi redovi iz prve tabele ostaju, kolone iz druge se dodaju gde ima poklapanja
+print("df1 redova:", len(df1))
+print("df2 redova posle drop_duplicates:", len(df2))
+print("df2 jedinstvenih PLTS:", df2["Broj PLTS"].nunique())
+
+# LEFT JOIN: svi redovi iz prve tabele ostaju
 merged = pd.merge(df1, df2, left_on="PLTS", right_on="Broj PLTS", how="left")
 
 final_cols = ["PLTS", "Datum dokumenta", "artikal_sifra", "ean",
@@ -39,7 +43,9 @@ final_cols = ["PLTS", "Datum dokumenta", "artikal_sifra", "ean",
 merged = merged.reindex(columns=final_cols)
 merged.to_excel("spojena_tabela.xlsx", index=False)
 
-print(f"Redova u prvoj tabeli:    {len(df1)}")
-print(f"Redova u spojenoj tabeli: {len(merged)}")
-print(f"Poklopljeno (popunjeno):  {merged['Broj PLTS'].notna().sum()}")
-print(f"Bez poklapanja (prazno):  {merged['Broj PLTS'].isna().sum()}")
+print()
+print("=== REZULTAT ===")
+print("Prva tabela:    ", len(df1))
+print("Spojena tabela: ", len(merged))
+print("Popunjeno:      ", merged["Broj PLTS"].notna().sum())
+print("Prazno:         ", merged["Broj PLTS"].isna().sum())
